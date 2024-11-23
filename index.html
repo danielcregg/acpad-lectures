@@ -6,32 +6,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Java Programming Lectures</title>
     <link rel="stylesheet" href="./assets/css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body class="home-page">
     <header>
         <h1>Java Programming Lectures</h1>
     </header>
+    
+    <div id="content" style="padding: 0 2rem;">
+        <!-- Content will be loaded here -->
+    </div>
 
-    <main class="lecture-grid">
-        <a href="viewer.html?lecture=serialization" class="lecture-card">
-            <h2>Java Serialization</h2>
-            <p>Understanding object serialization and deserialization in Java</p>
-        </a>
-        <a href="viewer.html?lecture=collections" class="lecture-card">
-            <h2>Java Collections</h2>
-            <p>Deep dive into Java Collections Framework</p>
-        </a>
-        <a href="viewer.html?lecture=javafx" class="lecture-card">
-            <h2>Java JavaFX</h2>
-            <p>Understanding JavaFX</p>
-        </a>
-        <!-- Add more lecture cards as you create them -->
-    </main>
+    <script>
+        // Configure marked to allow HTML
+        marked.setOptions({
+            headerIds: false,
+            mangle: false,
+            headerPrefix: '',
+            gfm: true,
+            breaks: true,
+            sanitize: false  // This is important to allow HTML
+        });
 
-    <footer>
-        <p>Java Programming Course - Created with 💻</p>
-    </footer>
+        fetch('./lectures/index.md')
+            .then(response => response.text())
+            .then(text => {
+                const parsed = marked.parse(text);
+                const doc = new DOMParser().parseFromString(parsed, 'text/html');
+                const content = document.getElementById('content');
+                
+                // Create lecture grid
+                const grid = document.createElement('div');
+                grid.className = 'lecture-grid';
+
+                // Convert each lecture section into a card
+                doc.querySelectorAll('h3').forEach(section => {
+                    try {
+                        const link = section.querySelector('a');
+                        const description = section.nextElementSibling;
+                        
+                        if (!link || !description) return;
+
+                        const card = document.createElement('a');
+                        card.className = 'lecture-card';
+                        card.href = link.getAttribute('href');
+                        
+                        const h2 = document.createElement('h2');
+                        h2.textContent = link.textContent;
+                        
+                        const p = document.createElement('p');
+                        p.textContent = description.textContent;
+                        
+                        card.appendChild(h2);
+                        card.appendChild(p);
+                        grid.appendChild(card);
+                    } catch (e) {
+                        console.error('Error creating card:', e);
+                    }
+                });
+
+                content.appendChild(grid);
+            })
+            .catch(error => console.error('Error loading content:', error));
+    </script>
 </body>
 
 </html>
